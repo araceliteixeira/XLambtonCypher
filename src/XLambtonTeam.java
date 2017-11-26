@@ -1,9 +1,12 @@
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.text.DateFormat;
 import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Date;
 import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Scanner;
@@ -48,28 +51,28 @@ public class XLambtonTeam {
 			for (String line: lines) {
 				if (!line.isEmpty()) {
 					switch(index) {
-					case 0:
-						agent = new Agent();
-						agent.setName(line);
-						index++;
-						break;
-					case 1:
-						agent.setOperation(line);
-						index++;
-						break;
-					case 2:
-						agent.setCountry(line);
-						index++;
-						break;
-					case 3:
-						agent.setDateAsString(line);
-						index++;
-						break;
-					case 4:
-						agent.setAgency(line);
-						agents.add(agent);
-						index = 0;
-						break;
+						case 0:
+							agent = new Agent();
+							agent.setName(line);
+							index++;
+							break;
+						case 1:
+							agent.setOperation(line);
+							index++;
+							break;
+						case 2:
+							agent.setCountry(line);
+							index++;
+							break;
+						case 3:
+							agent.setDateAsString(line);
+							index++;
+							break;
+						case 4:
+							agent.setAgency(line);
+							agents.add(agent);
+							index = 0;
+							break;
 					}
 				}
 			}
@@ -77,7 +80,7 @@ public class XLambtonTeam {
 			e.printStackTrace();
 		}
 	}
-	
+
 	private static String readInput() {
 		String line = "";
 		try {
@@ -89,7 +92,7 @@ public class XLambtonTeam {
 		}
 		return line;
 	}
-	
+
 	private static String readInputWithMessage(String message, String... options) {
 		String option = "";
 		List<String> list = Arrays.asList(options);
@@ -100,12 +103,38 @@ public class XLambtonTeam {
 		return option;
 	}
 
+	private static String readDateInput() {
+		String option = "";
+		String regex = "^[0-3]{1}[0-9]{1}[0-1]{1}[1-2]{1}[1-2]{1}[0-9]{3}$";
+		while (true) {
+			option = readInput().toLowerCase();
+			if (option.matches(regex)) {
+				break;
+			}
+			System.out.println("Invalid date format.");
+		}
+		return option;
+	}
+
+	private static String readDateInputWithExitOption() {
+		String option = "";
+		String regex = "^[0-3]{1}[0-9]{1}[0-1]{1}[1-2]{1}[1-2]{1}[0-9]{3}$";
+		while (true) {
+			option = readInput().toLowerCase();
+			if (option.equals("0") || option.matches(regex)) {
+				break;
+			}
+			System.out.println("Invalid date format.");
+		}
+		return option;
+	}
+
 	public static void createTeams() {
 
 		while (true) {
 			Team team = new Team();
 
-			System.out.println("\nType the team's code or 0 to return to main menu:");
+			System.out.println("\nTeam creation: Type the team's code or 0 to return to main menu:");
 			String code = readInput();
 			if (code.equals("0")) {
 				return;
@@ -115,7 +144,7 @@ public class XLambtonTeam {
 			do {
 				System.out.println("Type the team's start date (DDMMYYYY):");
 				try {
-					team.setStartDateAsString(readInput());
+					team.setStartDateAsString(readDateInput());
 				} catch (ParseException e) {
 					System.out.println("Invalid date format.");
 				}
@@ -124,7 +153,7 @@ public class XLambtonTeam {
 			do {
 				System.out.println("Type the team's end date (DDMMYYYY):");
 				try {
-					team.setEndDateAsString(readInput());
+					team.setEndDateAsString(readDateInput());
 				} catch (ParseException e) {
 					System.out.println("Invalid date format.");
 				}
@@ -171,10 +200,11 @@ public class XLambtonTeam {
 			System.out.println("");
 			String option = readInputWithMessage(
 					"Yes, save this team (y), No, select agents again (n) or "
-					+ "0 to cancel this team and return to team menu:", "y", "n", "0");
+							+ "0 to cancel this team and return to team menu:", "y", "n", "0");
 			if (option.equals("0")) {
 				return;
 			} else if (option.toLowerCase().equals("y")) {
+				team.setAgents(selectedAgents);
 				teams.add(team);
 				System.out.println("The team " + team.getCode() + " was successfully saved.");
 				return;
@@ -216,22 +246,88 @@ public class XLambtonTeam {
 	}
 
 	private static void report1() {
-		
+		while (true) {
+			System.out.println("\nReport: How many agents are allocated in a specific team\n");
+			Team team = null;
+
+			while (true) {
+				System.out.println("Type the team's code or 0 to return to report menu:");
+				String code = readInput();
+				if (code.equals("0")) {
+					return;
+				}
+				for (Team t: teams) {
+					if (t.getCode().equals(code)) {
+						team = t;
+						break;
+					}
+				}
+				if (team == null) {
+					System.out.println("There is no team with the code " + code);
+				} else {
+					break;
+				}
+			}
+
+			int count = team.getAgents().size();
+			if (count == 1) {
+				System.out.println("There is 1 agent in this team:");	
+			} else {
+				System.out.println("There are " + count + " agents in this team:");	
+			}
+			for (Agent a: team.getAgents()) {
+				System.out.println(a.getName());
+			}
+		}
 	}
 
 	private static void report2() {
-		
+		while (true) {
+			System.out.println("\nReport: Teams that are working in a specific date\n");
+			List<Team> activeTeams = new ArrayList<Team>();
+
+			while (true) {
+				System.out.println("Type the date or 0 to return to report menu:");
+				String option = readDateInputWithExitOption();
+				if (option.equals("0")) {
+					return;
+				}
+				Date date = null;
+				DateFormat formatter = new SimpleDateFormat("ddMMyyyy");
+				try {
+					date = formatter.parse(option);
+				} catch (ParseException e) {
+					System.out.println("Invalid date. Try again.");
+					continue;
+				}
+				for (Team t: teams) {
+					if ((t.getStartDate().before(date) || t.getStartDate().equals(date))
+							&& (t.getEndDate().after(date) || t.getEndDate().equals(date))) {
+						activeTeams.add(t);
+					}
+				}
+				if (activeTeams.size() == 0) {
+					System.out.println("There is no working team in " + option);
+				} else {
+					break;
+				}
+			}
+			System.out.println("Working team(s):");
+			for (Team t: activeTeams) {
+				System.out.println("Code: " + t.getCode());
+			}
+		}
 	}
 
 	private static void report3() {
-		
+		System.out.println("\nReport: Which agency has more agents\n");
 	}
 
 	private static void report4() {
-		
+		System.out.println("\nReport: How many teams are assigned to a specific agency\n");
 	}
 
 	private static void report5() {
-		
+		System.out.println("\nReport: How many agents per agency\n");
 	}
 }
