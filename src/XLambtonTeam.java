@@ -7,7 +7,10 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
 import java.util.NoSuchElementException;
 import java.util.Scanner;
 
@@ -93,6 +96,14 @@ public class XLambtonTeam {
 		return line;
 	}
 
+	private static void readEnter() {
+		try {
+			scanner.nextLine().trim();
+		} catch(IllegalStateException | NoSuchElementException e) {
+			System.out.println("System.in was closed; exiting");
+		}
+	}
+	
 	private static String readInputWithMessage(String message, String... options) {
 		String option = "";
 		List<String> list = Arrays.asList(options);
@@ -321,6 +332,26 @@ public class XLambtonTeam {
 
 	private static void report3() {
 		System.out.println("\nReport: Which agency has more agents\n");
+		Map<String, Integer> map = new HashMap<String, Integer>();
+		for (Agent a: agents) {
+			if (!map.containsKey(a.getAgency())) {
+				map.put(a.getAgency(), 1);
+			} else {
+				map.put(a.getAgency(), map.get(a.getAgency())+1);
+			}
+		}
+		Entry<String, Integer> biggestAgency = null;
+		for (Map.Entry<String, Integer> entry: map.entrySet()) {
+			if (biggestAgency == null) {
+				biggestAgency = entry;
+			} else if (entry.getValue() > biggestAgency.getValue()) {
+				biggestAgency = entry;
+			}
+		}
+		System.out.println("The agency " + biggestAgency.getKey() + " has more agents than the others (" +
+				biggestAgency.getValue() + ").");
+		System.out.println("Press <ENTER> to return to the report menu.");
+		readEnter();
 	}
 
 	private static void report4() {
