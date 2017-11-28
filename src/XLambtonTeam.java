@@ -96,9 +96,9 @@ public class XLambtonTeam {
 		return line;
 	}
 
-	private static void readEnter() {
+	private static void waitEnter() {
 		try {
-			scanner.nextLine().trim();
+			scanner.nextLine();
 		} catch(IllegalStateException | NoSuchElementException e) {
 			System.out.println("System.in was closed; exiting");
 		}
@@ -151,6 +151,10 @@ public class XLambtonTeam {
 				return;
 			}
 			team.setCode(code);
+			if (teams.contains(team)) {
+				System.out.println("There is already a team with this code.");
+				continue;
+			}
 
 			do {
 				System.out.println("Type the team's start date (DDMMYYYY):");
@@ -332,14 +336,8 @@ public class XLambtonTeam {
 
 	private static void report3() {
 		System.out.println("\nReport: Which agency has more agents\n");
-		Map<String, Integer> map = new HashMap<String, Integer>();
-		for (Agent a: agents) {
-			if (!map.containsKey(a.getAgency())) {
-				map.put(a.getAgency(), 1);
-			} else {
-				map.put(a.getAgency(), map.get(a.getAgency())+1);
-			}
-		}
+		
+		Map<String, Integer> map = getTotalAgentsPerAgency();
 		Entry<String, Integer> biggestAgency = null;
 		for (Map.Entry<String, Integer> entry: map.entrySet()) {
 			if (biggestAgency == null) {
@@ -350,15 +348,68 @@ public class XLambtonTeam {
 		}
 		System.out.println("The agency " + biggestAgency.getKey() + " has more agents than the others (" +
 				biggestAgency.getValue() + ").");
-		System.out.println("Press <ENTER> to return to the report menu.");
-		readEnter();
+		System.out.println("\nPress <ENTER> to return to the report menu.");
+		waitEnter();
+	}
+
+	private static Map<String, Integer> getTotalAgentsPerAgency() {
+		Map<String, Integer> map = new HashMap<String, Integer>();
+		for (Agent a: agents) {
+			if (!map.containsKey(a.getAgency())) {
+				map.put(a.getAgency(), 1);
+			} else {
+				map.put(a.getAgency(), map.get(a.getAgency())+1);
+			}
+		}
+		return map;
 	}
 
 	private static void report4() {
-		System.out.println("\nReport: How many teams are assigned to a specific agency\n");
+		while (true) {
+			System.out.println("\nReport: How many teams are assigned to a specific agency\n");
+			List<Team> teamsOfAgency = new ArrayList<Team>();
+
+			while (true) {
+				System.out.println("Type the agency code or 0 to return to report menu:");
+				String agency = readInput().toUpperCase();
+				if (agency.equals("0")) {
+					return;
+				}
+				for (Team t: teams) {
+					for (Agent a: t.getAgents()) {
+						if (a.getAgency().equals(agency) && !teamsOfAgency.contains(t)) {
+							teamsOfAgency.add(t);
+						}
+					}
+				}
+				if (teamsOfAgency.isEmpty()) {
+					System.out.println("There is no team assigned to the agency " + agency);
+				} else {
+					break;
+				}
+			}
+
+			int count = teamsOfAgency.size();
+			if (count == 1) {
+				System.out.println("There is 1 team assigned to this agency:");	
+			} else {
+				System.out.println("There are " + count + " teams assigned to this agency:");	
+			}
+			for (Team t: teamsOfAgency) {
+				System.out.println("Team code " + t.getCode());
+			}
+		}
 	}
 
 	private static void report5() {
 		System.out.println("\nReport: How many agents per agency\n");
+		
+		Map<String, Integer> map = getTotalAgentsPerAgency();
+		for (Map.Entry<String, Integer> entry: map.entrySet()) {
+			System.out.println("Agency " + entry.getKey() + ": " + entry.getValue() + " agents");
+			
+		}
+		System.out.println("\nPress <ENTER> to return to the report menu.");
+		waitEnter();
 	}
 }
